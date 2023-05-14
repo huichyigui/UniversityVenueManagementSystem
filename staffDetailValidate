@@ -1,0 +1,71 @@
+#!/bin/bash
+
+#constants
+declare -r TRUE=0
+declare -r FALSE=1
+
+# Variables
+break=0
+name=""
+staff=./staff.txt
+venue=./venue.txt
+
+sIdValid=$FALSE
+
+# Formatting
+startUnderline=$(tput smul)
+endUnderline=$(tput rmul)
+RED="\e[31m"
+GREEN="\e[32m"
+ENDCOLOR="\e[0m"
+bold=$(tput bold)
+normal=$(tput sgr0)
+
+clear
+
+source ./textCenter
+redraw "${bold}${startUnderline}Staff Details Validation Screen${endUnderline}${normal}"
+echo
+
+while [ "$break" -lt 1 ]; do
+    
+    # Read Staff ID
+    read -p "Enter Staff ID (eg:S0001): " stfId
+    while [[ ! $stfId =~ ^[Ss][0-9]{4}$ ]]; do
+        echo -e "\n${RED}Invalid ID input. Do try again.${normal}\n"
+        echo ""
+        read  -p "Enter Staff ID (eg:S0001): " stfId
+    done
+    
+    if grep -q "${stfId^^}" "$staff"; then
+        while IFS=: read -r sid sname faculty scontact semail
+        do
+            if [ "${stfId^^}" == "$sid" ]; then
+                name=$sname
+                echo -e "\n\tFull Name           : ${startUnderline}$sname${endUnderline}"
+            fi
+        done < $staff
+    else
+        echo -e "\n${RED}Staff ID [$stfId] does not exist.${normal}\n"   
+        sleep 5
+        clear
+        bash staffDetailValidate
+    fi
+    
+    input=0
+    until [ $input -eq 1 ]; do
+        read -p $'\n'"Press (n) to proceed Book Venue or (q) to return to University Venue Management Menu: " choice
+        
+        case "$choice" in
+            [Nn]) 
+                input=1
+                ./bookVenue "${stfId^}" "$name";;
+            [Qq]) 
+                input=1
+                break=1
+                bash mainMenu;;
+            *) 
+                echo -e "\nPlease respond with (n) or (q).\n"
+        esac
+    done
+done

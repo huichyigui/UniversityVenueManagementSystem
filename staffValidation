@@ -1,0 +1,37 @@
+#!/bin/bash
+
+#Let system only read alphabet
+function isNameValid() {
+    regex="^[a-zA-Z\ ]+$"
+    local name="$1"
+
+    if [[ "$name" =~ $regex ]]; then 
+        echo $TRUE
+    else
+        echo $FALSE
+    fi
+}
+
+#Let system read contact format [01X-XXXXXXX]
+function isContactValid() {
+    regex="^01[0-9]{1}-[0-9]{7,8}$"
+    local contact="$1"
+
+    if [[ "$contact" =~ $regex ]]; then
+        echo $TRUE
+    else
+        echo $FALSE
+    fi
+}
+
+#Let system read email format [xxxx@tarc.edu.my]
+function isEmailValid() {
+    regex="^[a-zA-Z0-9\._-]+\@tarc.edu.my$"
+    local email="$1"
+
+    if [[ "$email" =~ $regex ]]; then
+        echo $TRUE
+    else
+        echo $FALSE
+    fi
+}

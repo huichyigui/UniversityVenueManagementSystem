@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# Variables
+break=0
+confirmation=0
+
+# Formatting
+startUnderline=$(tput smul)
+endUnderline=$(tput rmul)
+RED="\e[31m"
+ENDCOLOR="\e[0m"
+bold=$(tput bold)
+normal=$(tput sgr0)
+
+clear
+echo "${bold}Staff Management Menu${normal}"
+
+echo -e "\n 1 -- Search Staff Details"
+echo " 2 -- Register New Staff"
+echo " 3 -- Update Staff Details"
+echo -e "\n Q -- Back to Previous Page\n"
+
+while [ "$break" -lt 1 ]; do
+    read -p "Please select a choice: " choice
+    
+    case "$choice" in
+        1) bash searchStaff;;
+        2) bash registerStaff;;
+        3) bash updateStaff;;
+        [Qq])
+            break=1
+            echo -e "\nRetrieving to ${bold}University Venue${normal} Management Menu" 
+            sleep 1
+            bash mainMenu;;
+        *) echo -e "\n${RED}Invalid choice input. Do try again.${ENDCOLOR}\n";;
+    esac
+done
+
+

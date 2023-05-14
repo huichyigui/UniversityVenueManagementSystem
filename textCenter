@@ -1,0 +1,21 @@
+#!/bin/bash
+
+function redraw() {
+
+local text="$1"
+
+text="$text"
+
+# Calculate the length of the text
+text_length=${#text}
+
+# Calculate the length of the terminal window
+terminal_width=$(tput cols)
+
+# Calculate the number of spaces needed to center the text
+spaces=$(( (terminal_width - text_length) / 2 ))
+
+# Print the spaces, the text, and the underline
+printf "%*s%s\n" $spaces "" "$text"
+
+}

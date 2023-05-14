@@ -1,0 +1,150 @@
+#!/bin/bash
+.  staffValidation
+
+#constants
+declare -r TRUE=0
+declare -r FALSE=1
+
+# Variables
+break=0
+filename=./staff.txt
+stfId="S0001"
+
+nameValid=$FALSE
+facultyValid=$FALSE
+contactValid=$FALSE
+emailValid=$FALSE
+
+# Formatting
+startUnderline=$(tput smul)
+endUnderline=$(tput rmul)
+RED="\e[31m"
+GREEN="\e[32m"
+ENDCOLOR="\e[0m"
+bold=$(tput bold)
+normal=$(tput sgr0)
+
+while [ "$break" -lt 1 ]; do
+    #title
+    clear
+    echo "${bold}Register Staff Screen${normal}"
+    echo -e "=====================\n"
+
+    # Staff ID Auto-generation
+    if ! [ -f "$filename" ]; then
+        echo -e "${GREEN}Hint: Database not found, default Staff ID generated...${ENDCOLOR}\n"
+        sleep .5
+        newId=$stfId
+        echo -e "Staff ID (auto generated)\t: $newId"
+    else
+        lineCount=$(wc -l < "$filename")
+        newNum=$(( lineCount + 1 ))
+        newId="S$(printf '%04d' "$newNum")"
+        echo -e "Staff ID (auto generated)\t: $newId"
+    fi
+    
+    # Read Full Name
+    while [ "$nameValid" -eq 1 ]; do
+        read -p "Full Name (As per NRIC)"$'\t\t: ' sname
+        nameValid=$(isNameValid "$sname")
+        
+        if [ "$nameValid" -eq 1 ]; then
+            echo -e "\n${RED}Invalid name input. Do try again.${ENDCOLOR}\n"
+        fi
+    done
+    
+    # Read Faculty
+    echo "Faculty: "
+    echo -e "\t1 - FOCS (Faculty of Computing and Information Technology)"
+    echo -e "\t2 - FAFB (Faculty of Accountancy, Finance and Business)"
+    echo -e "\t3 - FOET (Faculty of Engineering and Technology)"
+        
+    while [ "$facultyValid" -eq 1 ]; do
+        read -p "Please enter a choice (eg: 1)"$'\t: ' choice
+        
+        case "$choice" in
+            1) 
+                facultyValid=0
+                faculty="FOCS";;
+            2) 
+                facultyValid=0
+                faculty="FAFB";;
+            3) 
+                facultyValid=0
+                faculty="FOET";;
+            *) echo -e "\n${RED}Invalid selection. Do try again.${ENDCOLOR}\n"
+        esac
+    done
+    
+    # Read Contact Number
+    while [ "$contactValid" -eq 1 ]; do
+        read -p "Contact Number (eg: 012-1234567): " scontact
+        contactValid=$(isContactValid "$scontact")
+        
+        if [ "$contactValid" -eq 1 ]; then
+            echo -e "\n${RED}Invalid contact input. Do try again.${ENDCOLOR}\n"
+        fi
+    done
+    
+    # Read TAR UMT Email Address
+    while [ "$emailValid" -eq 1 ]; do
+        read -p "TAR UMT Email Address (eg: xxx@tarc.edu.my): " semail
+        emailValid=$(isEmailValid "$semail")
+        
+        if [ "$emailValid" -eq 1 ]; then
+            echo -e "\n${RED}Invalid email input. Do try again.${ENDCOLOR}\n"
+        fi
+    done
+    
+    # Confirmation
+    echo
+    printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' _
+    echo
+    echo -e "\n\tStaff ID               : ${startUnderline}${newId}${endUnderline}"
+    echo -e "\tFull Name (As per NRIC): ${startUnderline}${sname^^}${endUnderline}"
+    echo -e "\tFaculty                : ${startUnderline}$faculty${endUnderline}"
+    echo -e "\tContact Number         : ${startUnderline}$scontact${endUnderline}"
+    echo -e "\tTAR UMT Email Address  : ${startUnderline}$semail${endUnderline}\n"
+    
+    input1=0
+    until [ "$input1" -eq 1 ]; do
+        read -p "Confirm details? Press (y)es to save or (n)o to discard > " save
+        
+        case "$save" in
+        [Yy])
+            echo "${newId}:${sname^^}:$faculty:$scontact:$semail" >> $filename
+            echo "..."
+            sleep .5
+            echo -e "${GREEN}Staff record successfully saved.${ENDCOLOR}\n"            
+            input1=1;;            
+        [Nn])
+            input1=1;;
+        *) echo -e "\n${RED}Invalid choice input. Do try again.${ENDCOLOR}\n"
+        esac    
+    done
+    
+    #Loop in add another staff
+    input2=0
+    until [ "$input2" -eq 1 ]; do
+    	echo -e "\nPress (q) to return to ${bold}University Venue${normal} Management Menu"
+        echo
+        read -p "Register Another Staff? (y)es or (q)uit: " choice
+        
+        case "$choice" in
+        [Yy])
+            input2=1
+            clear
+            idValid=$FALSE
+            nameValid=$FALSE
+            facultyValid=$FALSE
+            contactValid=$FALSE
+            emailValid=$FALSE;;
+        [Qq])
+            input2=1
+            break=1
+            bash mainMenu;;
+        *) echo -e "\nInvalid choice input. Do try again.\n"
+        esac
+    done
+done
+

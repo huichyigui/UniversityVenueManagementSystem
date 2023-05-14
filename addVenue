@@ -1,0 +1,194 @@
+#!/bin/bash
+.  venueValidation
+
+#constants
+declare -r TRUE=0
+declare -r FALSE=1
+declare -r MAX_LEC=500
+declare -r MAX_TUT=45
+declare -r MAX_LAB=32
+
+# Variables
+break=0
+max=0
+filename=./venue.txt
+
+blockValid=$FALSE
+roomNumValid=$FALSE
+roomTypeValid=$FALSE
+capacityValid=$FALSE
+remarksValid=$FALSE
+
+# Formatting
+startUnderline=$(tput smul)
+endUnderline=$(tput rmul)
+RED="\e[31m"
+GREEN="\e[32m"
+ENDCOLOR="\e[0m"
+bold=$(tput bold)
+normal=$(tput sgr0)
+
+
+
+while [ "$break" -lt 1 ]; do
+    #title 
+    clear
+    source ./textCenter
+    redraw "${bold}${startUnderline}Add New Venue Screen${endUnderline}${normal}"
+    
+    # Read Block Name
+    echo -e "\nBlock Name: "
+    echo -e "\t1 - SG"
+    echo -e "\t2 - K"
+    echo -e "\t3 - B"
+        
+    while [ "$blockValid" -eq 1 ]; do
+        read -p "Please enter a choice (eg: 1)"$'\t\t: ' choice
+        
+        case "$choice" in
+            1) 
+                blockValid=0
+                blockName="SG";;
+            2) 
+                blockValid=0
+                blockName="K";;
+            3) 
+                blockValid=0
+                blockName="B";;
+            *) echo -e "\n${RED}Invalid selection. Do try again.${ENDCOLOR}\n"
+        esac
+    done
+    
+    # Read Room Number
+    while [ "$roomNumValid" -eq 1 ]; do
+        read -p "Room Number (eg: 001)"$'\t\t\t: '${blockName} rNum
+        roomNumValid=$(isRoomNumValid "$rNum")
+        rNum="${blockName}${rNum^^}"
+        
+        if [ "$roomNumValid" -eq 1 ]; then
+            echo -e "\n${RED}Invalid number input. Do try again.${ENDCOLOR}\n"
+        elif grep -q "$rNum" "$filename"
+        then
+            roomNumValid=$FALSE
+            echo -e "\n${RED}Room Number already exists. Do try again.${ENDCOLOR}\n"
+        fi
+    done
+    
+    
+    # Read Room Type
+    echo "Room Type: "
+    echo -e "\t1 - Lecture Hall"
+    echo -e "\t2 - Tutorial Room"
+    echo -e "\t3 - Lab"
+    
+    while [ "$roomTypeValid" -eq 1 ]; do
+        read -p "Please enter a choice (eg: 1)"$'\t\t: ' choice
+        
+        case "$choice" in
+            1) 
+                roomTypeValid=0
+                rType="Lecture Hall";;
+            2) 
+                roomTypeValid=0
+                rType="Tutorial Room";;
+            3) 
+                roomTypeValid=0
+                rType="Lab";;
+            *) echo -e "\n${RED}Invalid selection. Do try again.${ENDCOLOR}\n"
+        esac
+    done
+    
+    # Read Capacity
+    while [ "$capacityValid" -eq 1 ]; do
+        read -p "Enter Capacity (eg: 26)"$'\t\t\t: ' capacity
+        capacityValid=$(isCapacityValid "$capacity")
+
+        case "$rType" in
+            "Lecture Hall") max=$MAX_LEC;;
+            "Tutorial Room") max=$MAX_TUT;;
+            "Lab") max=$MAX_LAB;;
+        esac
+
+        if [ "$capacityValid" -eq 1 ]; then
+            echo -e "\n${RED}Invalid capacity input. Do try again.${ENDCOLOR}\n"
+        elif [ $capacity -gt $max ]; then
+            capacityValid=$FALSE
+            echo -e "\n${RED}The max capacity for $type is $max.${ENDCOLOR}\n"
+        fi
+    done
+    
+    # Read Remarks
+    while [ "$remarksValid" -eq 1 ]; do
+        read -p "Enter Remarks (Max: 30 words) Press ENTER to skip: " remarks
+        
+        if [ -z "$remarks" ]; then
+            remarks="N/A"
+        fi
+        
+        remarksValid=$(isRemarksValid "$remarks")            
+        if [ "$remarksValid" -eq 1 ]; then
+            echo -e "\n${RED}Remarks too long. Do try again.${ENDCOLOR}\n"
+        fi
+    done
+    
+    # Confirmation
+    printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' _
+    echo -e "\n\tBlock Name    : ${startUnderline}$blockName${endUnderline}"
+    echo -e "\tRoom Number   : ${startUnderline}$rNum${endUnderline}"
+    echo -e "\tRoom Type     : ${startUnderline}$rType${endUnderline}"
+    echo -e "\tCapacity      : ${startUnderline}$capacity${endUnderline}"
+    echo -e "\tRemarks       : ${startUnderline}$remarks${endUnderline}\n"
+    
+    input1=0
+    until [ "$input1" -eq 1 ]; do
+    read -p "Confirm details? Press (y)es to save or (n)o to discard > " save
+    status="Available"
+        
+    case "$save" in
+        [Yy])
+            if [[ ! -f "$filename" ]]; then
+                echo -e "${GREEN}Hint: Database not found, generating now...${normal}"
+                sleep 1
+                echo "BlockName:RoomNumber:RoomType:Capacity:Remarks:Availability" >> "$filename"
+                echo "$blockName:$rNum:$rType:$capacity:$remarks:$status" >> "$filename"
+                echo -e "\nSaving..."
+                sleep 1
+                echo -e "${GREEN}Venue record successfully saved.${ENDCOLOR}"
+            else
+                echo "$blockName:$rNum:$rType:$capacity:$remarks:$status" >> "$filename"
+                echo -e "\nSaving..."
+                sleep 1
+                echo -e "${GREEN}Venue record successfully saved.${ENDCOLOR}\n"
+            fi   
+            input1=1;;      
+        [Nn])
+            input1=1;;
+        *) echo -e "\n${RED}Invalid choice input. Do try again.${ENDCOLOR}\n"
+        esac    
+done
+
+    
+    #Loop in add another venue
+    input2=0
+    until [ "$input2" -eq 1 ]; do
+        echo
+        read -p "Add Another Venue? (y)es or (q)uit: " choice
+        echo -e "\nPress (q) to return to ${bold}University Venue${normal} Management Menu"
+        
+        case "$choice" in
+        [Yy])
+            input2=1
+            clear
+            blockValid=$FALSE
+            roomNumValid=$FALSE
+            roomTypeValid=$FALSE
+            capacityValid=$FALSE
+            remarksValid=$FALSE;;
+        [Qq])
+            input2=1
+            break=1
+            bash mainMenu;;
+        *) echo -e "\nInvalid choice input. Do try again.\n"
+        esac
+    done
+done

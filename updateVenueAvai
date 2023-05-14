@@ -1,0 +1,109 @@
+#!/bin/bash
+
+# Variables
+break=0
+input1=0
+filename=./venue.txt
+
+nameValid=$FALSE
+facultyValid=$FALSE
+contactValid=$FALSE
+emailValid=$FALSE
+
+# Formatting
+startUnderline=$(tput smul)
+endUnderline=$(tput rmul)
+RED="\e[31m"
+GREEN="\e[32m"
+ENDCOLOR="\e[0m"
+bold=$(tput bold)
+normal=$(tput sgr0)
+YEL="\e[1;33m"
+
+clear
+while [ "$break" -lt 1 ]; do
+	#title
+    	
+    	echo "${bold}Update Venue Availability${normal}"
+	echo -e "=========================\n"
+	echo "Available Room:"
+	echo "+----------+--------+--------------+--------+---------------------------------+------------+"
+	echo -e "|Block Name|${YEL}Room Num${ENDCOLOR}|Room Type     |Capacity|            Remarks              |Availability|"
+	echo "+----------+--------+--------------+--------+---------------------------------+------------+"
+	awk -F: '$6=="Available" {printf("|%-10s|%-8s|%-14s|%-8s|%-33s|%-12s|\n", $1, $2, $3, $4, $5, $6)}' venue.txt
+	awk -F: '$6=="Unavailable" {printf("|%-10s|%-8s|%-14s|%-8s|%-33s|%-12s|\n", $1, $2, $3, $4, $5, $6)}' venue.txt
+	echo "+----------+--------+--------------+--------+---------------------------------+------------+"
+	echo   	
+    	read -p "Enter Room Number (eg: B100A): " roomID    
+	while [[ ! "$input1" -eq 1 ]]; do
+    		if [ -z "$roomID" ]; then
+        		echo -e "\n${RED}Blank input. Do try again.${normal}\n"
+        		read -p "Enter Room Number (eg: B100A): " roomID
+    		else
+        		input1="1"
+    		fi
+	done		
+	capitalized=$(echo "$roomID" | tr '[:lower:]' '[:upper:]')
+
+capitalized=$(echo "$roomID" | tr '[:lower:]' '[:upper:]')
+status=0
+input1=0
+currentAvailability=""
+if grep -q "$capitalized" "$filename"; then
+    while IFS=: read -r BlockName RoomNumber RoomType Capacity Remarks Availability
+        do
+        Availability="$Availability"
+            if [ "$capitalized" == "$RoomNumber" ]; then
+            	
+            	if [ "$Availability" == "Available" ];then
+            		status="Unavailable"
+            	else
+            		status="Available"
+            	fi
+            	
+            	currentAvailability="$Availability"
+            fi
+        done < "$filename"
+        echo
+        until [ "$input1" -eq 1 ]; do
+        read -p "Update Room Number: $capitalized from $currentAvailability to $status: Y/N:" answer
+        case "$answer" in
+        	[Yy])
+        		file_contents=$(cat "$filename")
+        		echo -e "\nSaving..."
+        		echo "Old status: $currentAvailability"
+        		echo "New status: $status"
+        		#updated_contents=$(sed -i "s/^$capitalized:$currentAvailability/$/$capitalized:$status/" "$filename")
+ updated_contents=$(echo "$file_contents" | sed -i "/^[^:]*:$capitalized/s/$currentAvailability/$status/" "$filename")
+                        echo -e "\n${GREEN}Availability updated successfully.${normal}\n"
+                                
+        		
+        		sleep .5
+        		input1=1;;
+            [Nn]) 
+                input1=1;;
+            *) echo -e "\n${RED}Invalid selection. Do try again.${ENDCOLOR}\n"
+        esac
+        done
+    input2=0
+        until [ "$input2" -eq 1 ]; do
+            echo
+            read -p "Update Another Venue Availability? (y)es or (q)uit: " choice
+        
+            case "$choice" in
+                [Yy])
+                    input1=0
+                    input2=1;;
+                [Qq])
+                    input2=1
+                    break=1
+                    bash mainMenu;;
+                *) echo -e "\nInvalid choice input. Do try again.\n"
+            esac
+        done
+else
+    echo -e "\n${RED}Error: Room not found.${ENDCOLOR}\n"
+fi 
+
+
+done

@@ -1,0 +1,64 @@
+#!/bin/bash
+
+#constants
+declare -r TRUE=0
+declare -r FALSE=1
+
+# Variables
+break=0
+filename=./staff.txt
+
+# Formatting
+startUnderline=$(tput smul)
+endUnderline=$(tput rmul)
+RED="\e[31m"
+GREEN="\e[32m"
+ENDCOLOR="\e[0m"
+bold=$(tput bold)
+normal=$(tput sgr0)
+
+while [ "$break" -lt 1 ]; do
+    clear
+    source ./textCenter
+    redraw "${bold}${startUnderline}Search Staff Screen${endUnderline}${normal}"
+    echo
+    read -p "Enter Staff ID (eg: S0001): " stfId
+    while [[ ! $stfId =~ ^[Ss][0-9]{4}$ ]]; do
+        echo -e "\n${RED}Invalid ID input. Do try again.${normal}\n"
+        echo ""
+        read  -p "Enter Staff ID (eg:S0001): " stfId
+    done
+    
+    if grep -q "${stfId^^}" "$filename"; then
+        while IFS=: read -r sid sname faculty scontact semail
+        do
+            if [ "${stfId^^}" == "$sid" ]; then                
+                printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' _
+                echo -e "\n\tFull Name           : ${startUnderline}$sname${endUnderline}"
+                echo -e "\tFaculty & Programme : ${startUnderline}$faculty${endUnderline}"
+                echo -e "\tContact Number      : ${startUnderline}$scontact${endUnderline}"
+                echo -e "\tEmail Address       : ${startUnderline}$semail${endUnderline}"
+                printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' _
+            fi
+        done < $filename
+    else
+        echo -e "\n${RED}Staff ID [$stfId] does not exist.${normal}\n"
+    fi
+    
+    input=0
+    until [ $input = 1 ]; do
+        echo
+        read -p "Search Another Staff? (y)es or (q)uit: " choice
+        
+        case "$choice" in
+            [Yy]) 
+                input=1;;
+            [Qq]) 
+                input=1
+                break=1
+                bash mainMenu;;
+            *)
+            echo -e "\n${RED}Please respond with (y)es or (q)uit.${normal}\n"
+        esac
+    done    
+done

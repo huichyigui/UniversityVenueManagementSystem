@@ -1,0 +1,64 @@
+#!/bin/bash
+
+break=0
+confirmation=0
+startUnderline=$(tput smul)
+endUnderline=$(tput rmul)
+RED="\e[31m"
+ENDCOLOR="\e[0m"
+bold=$(tput bold)
+normal=$(tput sgr0)
+venue=./venue.txt
+
+while [ "$break" -lt 1 ]; do
+clear
+source ./textCenter
+redraw "${bold}${startUnderline}List University Venue Screen${endUnderline}${normal}"
+
+echo
+read -p "Enter Block Name (eg:B): " blockID
+while [[ ! $blockID =~ ^[a-zA-Z]+$ ]]; do
+        echo -e "${RED}Invalid input. Do try again.${ENDCOLOR}"
+        echo ""
+        read -p "Enter Block Name (eg:B): " blockID
+    done
+    
+if grep -wq "${blockID^^}" venue.txt; then
+	printf '%*s\n' "${COLUMNS:-$(tput cols)}" '' | tr ' ' _
+	echo
+	echo "+----------+--------+--------------+--------+---------------------------+------------+"
+echo "|Block Name|Room Num|Room Type     |Capacity|         Remarks           |Availability|"
+	echo "+----------+--------+--------------+--------+---------------------------+------------+"
+	awk -v var="${blockID^^}" -F: '$1==var {printf("|%-10s|%-8s|%-14s|%-8s|%-27s|%-12s|\n", $1, $2, $3, $4, $5, $6)}' venue.txt
+	echo "+----------+--------+--------------+--------+---------------------------+------------+"
+else
+	echo -e "\n${RED}Opps, block Name does not exist.${ENDCOLOR}"
+fi
+
+echo
+echo "Press (q) to return to ${bold}University Venue${normal} Management Menu"
+echo
+input=0
+    until [ $input = 1 ]; do
+        echo
+        read -p "Search Another Block Venue? (y)es or (q)uit: " choice
+        
+        case "$choice" in
+            [Yy]) 
+                input=1
+                blockName=""
+                blockValid=$FALSE;;
+            [Qq]) 
+                input=1
+                break=1
+                bash mainMenu;;
+            *)
+            echo -e "\n${RED}Please respond with (y)es or (q)uit.${normal}\n"
+        esac
+    done 
+
+done
+
+
+
+

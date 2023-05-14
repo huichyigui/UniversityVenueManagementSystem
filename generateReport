@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# Variables
+booking=./booking.txt
+start_day=$(date -d "$(date +%m/%d/%Y) -$(($(date +%u)-1)) days" +%m/%d/%Y)
+end_day=$(date -d "$(date +%m/%d/%Y) +$((7-$(date +%u))) days" +%m/%d/%Y)
+sday=$(date -d "$start_day" +"%d-%m-%Y")
+eday=$(date -d "$end_day" +"%d-%m-%Y")
+today=$(date +"%m/%d/%Y %I:%M %p")
+filename=./venue_booking_report_$sday~$eday.txt
+
+generate_booking_report() {
+clear
+
+if [ -f $filename ]; then
+    rm $filename
+fi
+
+touch $filename
+echo -e "Weekly Venue Booking Report Between $start_day and $end_day\n" >> $filename
+
+output=$(awk -F '-' -v start="$start_day" -v end="$end_day" '$4 >= start && $4 <= end' $booking)
+
+if [ -z "$output" ]; then
+    echo "No booking records within $start_day to $end_day." >> $filename
+else 
+    echo "+--------+--------------------+-----------+------------+---------+-------+------------------------------+" >> $filename
+    echo "|Staff ID|Staff Name          |Room Number|Date Booking|Time From|Time To|Remarks                       |" >> $filename
+    echo "+--------+--------------------+-----------+------------+---------+-------+------------------------------+" >> $filename
+    awk -F '-' -v start="$start_day" -v end="$end_day" '$4 >= start && $4 <= end {printf "|%-8s|%-20s|%-11s|%-12s|%-9s|%-7s|%-30s|\n", $1, $2, $3, $4, $5, $6, $7}' $booking >> $filename
+    echo "+--------+--------------------+-----------+------------+---------+-------+------------------------------+" >> $filename
+    line=$(awk -F '-' -v start="$start_day" -v end="$end_day" '$4 >= start && $4 <= end {count++} END{print count}' $booking)
+    echo "Total Bookings Made: $line" >> $filename
+fi
+echo -e "\nPrinted on $today." >> $filename
+}
+
+generate_booking_report
+
+
+

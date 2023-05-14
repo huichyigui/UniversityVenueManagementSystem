@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# Variables
+break=0
+confirmation=0
+
+# Formatting
+startUnderline=$(tput smul)
+endUnderline=$(tput rmul)
+RED="\e[31m"
+ENDCOLOR="\e[0m"
+bold=$(tput bold)
+normal=$(tput sgr0)
+
+clear
+echo "${bold}Venue Management Menu${normal}"
+
+echo -e "\n 1 -- List Venue"
+echo " 2 -- Add New Venue"
+echo " 3 -- Update Venue Availability"
+echo -e "\n Q -- Back to Previous Page\n"
+
+while [ "$break" -lt 1 ]; do
+    read -p "Please select a choice: " choice
+    
+    case "$choice" in
+        1) bash searchVenue;;
+        2) bash addVenue;;
+        3) bash updateVenueAvai;;
+        [Qq])
+            break=1
+            echo "Retrieving to ${bold}University Venue${normal} Management Menu" 
+            sleep 1
+            bash mainMenu;;
+        *) echo -e "\n${RED}Invalid choice input. Do try again.${ENDCOLOR}\n";;
+    esac
+done

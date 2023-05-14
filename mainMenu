@@ -1,0 +1,81 @@
+#!/bin/bash
+.  bookValidation
+
+#constants
+declare -r TRUE=0
+declare -r FALSE=1
+
+# Variables
+break=0
+confirmation=0
+timeValid=$FALSE
+
+# Formatting
+startUnderline=$(tput smul)
+endUnderline=$(tput rmul)
+RED="\e[31m"
+BLUE='\033[1;35m'
+ENDCOLOR="\e[0m"
+bold=$(tput bold)
+normal=$(tput sgr0)
+
+
+
+echo "0 9 * * 0 ./generateReport" | crontab -
+clear
+
+while [ "$break" -lt 1 ]; do
+	echo -e "${startUnderline}${BLUE}𝓤𝓷𝓲𝓿𝓮𝓻𝓼𝓲𝓽𝔂 𝓥𝓮𝓷𝓾𝓮 𝓜𝓪𝓷𝓪𝓰𝓮𝓶𝓮𝓷𝓽 𝓜 𝓮𝓷𝓾${ENDCOLOR}${endUnderline}"
+	echo -e "\n 1 -- Staff Management"
+	echo " 2 -- Venue Management"
+	echo " 3 -- Book Venue"
+	echo " 4 -- Schedule Weekly Venue Booking Report"
+	echo -e "\n Q -- Exit from Program\n"
+    
+    read -p "Please select a choice: " choice
+
+    case "$choice" in
+        1) 
+            break=1
+            bash staffMgmt;;
+        2) 
+            break=1
+            bash venueMgmt;;
+        3) 
+            break=1
+            bash staffDetailValidate;;
+        4)  
+            if crontab -l &> /dev/null; then
+                crontab -r
+            fi
+            echo -e "Schedule Day\t\t: Sunday"
+            # Read Time From
+            while [ "$timeValid" -eq 1 ]; do
+    		read -p "Schedule Time (hh:mm)"$'\t: ' time
+    		timeValid=$(isTimeValid "$time")
+
+    		if [ "$timeValid" -eq 1 ]; then
+        	    echo -e "\n${RED}Please enter valid Time From in 24-hour clock time.${ENDCOLOR}\n"
+    		fi
+	    done
+	    IFS=":"
+	    read -r hour minute <<< "$time"
+	    if [[ "${hour:0:1}" == "0" ]]; then
+	        hour="${hour:1}"
+	    fi
+	    if [[ "${minute:0:1}" == "0" ]]; then
+	        minute="${minute:1}"
+	    fi
+            echo "$minute $hour * * 0 ./generateReport" | crontab -            
+            echo -e "Your weekly venue booking report will be generated on Sunday, $time\n"
+            
+            sleep 3
+            timeValid=$FALSE;;
+        [Qq]) 
+            break=1
+            echo -e "\nExiting from program..."
+            sleep .5
+            exit;;
+        *) echo -e "\n${RED}\U0001f917 Please enter a valid input. \U0001f917 ${ENDCOLOR}\n";;
+    esac
+done

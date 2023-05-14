@@ -1,0 +1,187 @@
+#!/bin/bash
+.  staffValidation
+
+#constants
+declare -r TRUE=0
+declare -r FALSE=1
+
+# Variables
+break=0
+filename=./staff.txt
+
+nameValid=$FALSE
+facultyValid=$FALSE
+contactValid=$FALSE
+emailValid=$FALSE
+
+# Formatting
+startUnderline=$(tput smul)
+endUnderline=$(tput rmul)
+RED="\e[31m"
+GREEN="\e[32m"
+ENDCOLOR="\e[0m"
+bold=$(tput bold)
+normal=$(tput sgr0)
+
+function editSName() {
+local ori="$1"
+echo -e "Current Full Name: $ori\n"
+
+while [ "$nameValid" -eq 1 ]; do
+    read -p "New Full Name (As per NRIC)"$'\t\t: ' sname    
+    nameValid=$(isNameValid "$sname")
+        
+    if [ "$nameValid" -eq 1 ]; then
+        echo -e "\n${RED}Invalid name input. Do try again.${ENDCOLOR}\n"
+    fi
+done
+
+file_contents=$(cat "$filename")
+updated_contents=$(echo "$file_contents" | sed -i "/^${id^^}/s/$ori/${sname^^}/" "$filename")
+
+echo -e "\n${GREEN}Name updated successfully.${normal}\n"
+sleep .5
+}
+
+function editFaculty() {
+local ori="$1"
+echo -e "Current Faculty: $ori\n"
+
+echo "New Faculty: "
+echo -e "\t1 - FOCS (Faculty of Computing and Information Technology)"
+echo -e "\t2 - FAFB (Faculty of Accountancy, Finance and Business)"
+echo -e "\t3 - FOET (Faculty of Engineering and Technology)"
+        
+while [ "$facultyValid" -eq 1 ]; do
+    read -p "Please enter a choice (eg: 1)"$'\t: ' choice
+    
+    case "$choice" in
+        1) 
+            facultyValid=0
+            faculty="FOCS";;
+        2) 
+            facultyValid=0
+            faculty="FAFB";;
+        3) 
+            facultyValid=0
+            faculty="FOET";;
+        *) echo -e "\n${RED}Invalid selection. Do try again.${ENDCOLOR}\n"
+    esac
+done
+
+file_contents=$(cat "$filename")
+updated_contents=$(echo "$file_contents" | sed -i "/^${id^^}/s/$ori/${faculty}/" "$filename")
+
+echo -e "\n${GREEN}Faculty updated successfully.${normal}\n"
+sleep .5
+}
+
+function editContact() {
+local ori="$1"
+echo -e "Current Contact Number: $ori\n"
+
+while [ "$contactValid" -eq 1 ]; do
+    read -p "New Contact Number (eg: 012-1234567): " scontact
+    contactValid=$(isContactValid "$scontact")
+    
+    if [ "$contactValid" -eq 1 ]; then
+        echo -e "\n${RED}Invalid contact input. Do try again.${ENDCOLOR}\n"
+    fi
+done
+
+file_contents=$(cat "$filename")
+updated_contents=$(echo "$file_contents" | sed -i "/^${id^^}/s/$ori/${scontact}/" "$filename")
+
+echo -e "\n${GREEN}Contact number updated successfully.${normal}\n"
+sleep .5
+}
+
+function editEmail() {
+local ori="$1"
+echo -e "Current Email: $ori\n"
+
+while [ "$emailValid" -eq 1 ]; do
+    read -p "New TAR UMT Email Address (eg: xxx@tarc.edu.my): " semail
+    emailValid=$(isEmailValid "$semail")
+        
+    if [ "$emailValid" -eq 1 ]; then
+        echo -e "\n${RED}Invalid email input. Do try again.${ENDCOLOR}\n"
+    fi
+done
+
+file_contents=$(cat "$filename")
+updated_contents=$(echo "$file_contents" | sed -i "/^${id^^}/s/$ori/${semail}/" "$filename")
+
+echo -e "\n${GREEN}TAR UMT email address updated successfully.${normal}\n"
+sleep .5
+}
+
+clear
+while [ "$break" -lt 1 ]; do
+    #title   
+    echo "${bold}Update Staff Details Screen${normal}"
+    echo -e "===========================\n"
+    read -p "Enter Staff ID (eg: S0001): " stfId    
+    while [[ ! $stfId =~ ^[Ss][0-9]{4}$ ]]; do
+        echo -e "\n${RED}Invalid ID input. Do try again.${normal}\n"
+        echo ""
+        read  -p "Enter Staff ID (eg:S0001): " stfId
+    done
+    
+    if grep -q "${stfId^^}" "$filename"; then
+        staffDetail=$(grep -i "$stfId" "$filename")
+        IFS=: read sid sname faculty scontact semail <<< "$staffDetail"
+        input1=0
+        until [ "$input1" -eq 1 ]; do
+            echo -e "\nEnter the attribute you want to update:"
+            echo "1 - Staff Name"
+            echo "2 - Faculty"
+            echo "3 - Contact Number"
+            echo "4 - TAR UMT Email Address"
+            echo
+            read -p "Please select a choice (Q to quit editing): " choice
+        
+            case "$choice" in
+                1) 
+                    editSName "$sname"
+                    nameValid=$FALSE;;
+                2) 
+                    editFaculty "$faculty"
+                    facultyValid=$FALSE;;
+                3) 
+                    editContact "$scontact"
+                    contactValid=$FALSE;;
+                4) 
+                    editEmail "$semail"
+                    emailValid=$FALSE;;
+                [Qq]) 
+                    echo
+                    input1=1;;
+                *) echo -e "\n${RED}Invalid choice input. Do try again.${normal}\n"
+            esac
+        done
+        
+        #Loop in add another staff
+        input2=0
+        until [ "$input2" -eq 1 ]; do
+            echo
+            read -p "Update Another Staff Details? (y)es or (q)uit: " choice
+        
+            case "$choice" in
+                [Yy])
+                    input2=1
+                    nameValid=$FALSE
+                    facultyValid=$FALSE
+                    contactValid=$FALSE
+                    emailValid=$FALSE;;
+                [Qq])
+                    input2=1
+                    break=1
+                    bash mainMenu;;
+                *) echo -e "\nInvalid choice input. Do try again.\n"
+            esac
+        done
+    else
+        echo -e "\n${RED}Staff ID [$stfId] does not exist.${normal}\n"
+    fi
+done
