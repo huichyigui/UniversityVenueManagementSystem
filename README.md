@@ -1,5 +1,5 @@
-# UniversityVenueManagementSystem
-<h1>To whom it may concern:</h1>
+# University Venue Management System
+<h3>To whom it may concern:</h3>
 
 1. Download and unzip it to a location, eg: /home directory.
 
